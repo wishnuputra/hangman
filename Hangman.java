@@ -1,8 +1,7 @@
 /*
  * File: Hangman.java
  * ------------------
- * This program will eventually play the Hangman game from
- * Assignment #4.
+ * This program will eventually play the Hangman game
  */
 
 import acm.graphics.*;
@@ -13,6 +12,7 @@ import java.awt.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 public class Hangman extends ConsoleProgram {
 
@@ -48,12 +48,14 @@ public class Hangman extends ConsoleProgram {
 	
 	private GCanvas canvas = new GCanvas();
 	
+	/* Variables for the secret word and the number of guess left */
 	private String secretWord = "";
 	private String wordState = "";
-	private char guess;
-	private String newWordState = "";
 	private int guessLeft = N_GUESSES;
+	/* The guessed letter, typed in by the user. */
+	private char guess;
 	
+	/* Line objects as strings for Karel's parachute */
 	private GLine line1;
 	private GLine line2;
 	private GLine line3;
@@ -62,11 +64,19 @@ public class Hangman extends ConsoleProgram {
 	private GLine line6;
 	private GLine line7;
 	
-	private GLabel partiallyGuessed = new GLabel("");
-	private GLabel incorrectGuesses = new GLabel("");
-	private String wrongWord = "";
+	/* Image object for Karel and his parachute */
 	private GImage karel = new GImage("karel.png");
 	private GImage parachute = new GImage("parachute.png");
+	
+	/* Labels to show the guessed letter */
+	private GLabel partiallyGuessed = new GLabel("");
+	private GLabel incorrectGuesses = new GLabel("");
+	/* Variable to track the wrong letter */
+	private String wrongLetter = "";
+	
+	
+	/* An array that will contain secret words for Hangman game */
+	private ArrayList<String> wordList = new ArrayList<String>();
 	
 	
 	
@@ -79,15 +89,14 @@ public class Hangman extends ConsoleProgram {
 	}
 	
 	public void run() {
-		// shall we?
+		openHangmanLexicon();
+		
 		drawBackground();
 		drawParachute();
 		drawKarel();
 		drawString();
 		
-		
-		
-		secretWord = getRandomWord();
+		secretWord = getRandomWord2();
 		println("Welcome to Hangman");
 		wordState = displayHint(secretWord);
 		
@@ -128,6 +137,22 @@ public class Hangman extends ConsoleProgram {
 		if(index == 9) return "ZIRCON";
 		throw new ErrorException("getWord: Illegal index");
 	}
+	
+	/**
+	 * Method: getRandomWord2
+	 * ------------------------
+	 * This method will return a random word to use in the Hangman game.
+	 * It randomly select a word from the ArrayList named wordList.
+	 * @return
+	 */
+	private String getRandomWord2() {
+		int maxIndex = wordList.size();
+		int index = rg.nextInt(maxIndex);
+		String word = wordList.get(index);
+		
+		return word;
+	}
+	
 	/**
 	 * Method: displayHint
 	 * --------------------
@@ -206,7 +231,7 @@ public class Hangman extends ConsoleProgram {
 		if(secretWord.indexOf(guess) < 0) {
 			guessLeft--;
 			println("There are no " + guess + "'s " + "in the word.");
-			wrongWord += guess;
+			wrongLetter += guess;
 			removeString(guessLeft);
 		} else if(secretWord.indexOf(guess) > 0) {
 			println("That guess is correct");
@@ -241,24 +266,50 @@ public class Hangman extends ConsoleProgram {
 		return false;
 	}
 	
+	/**
+	 * Method: drawBackground
+	 * -----------------------
+	 * This method will draw a backgound image to the canvas.
+	 */
 	private void drawBackground() {
 		GImage bg = new GImage("background.jpg");
 		bg.setSize(canvas.getWidth(), canvas.getHeight());
 		canvas.add(bg, 0, 0);
 	}
 	
+	/**
+	 * Method: drawParachute
+	 * -----------------------
+	 * This method will draw parachute for Karel
+	 * in the center of the canvas.
+	 */
 	private void drawParachute() {
 		parachute.setSize(PARACHUTE_WIDTH, PARACHUTE_HEIGHT);
 		double x = (canvas.getWidth() - parachute.getWidth()) / 2;
 		canvas.add(parachute, x, PARACHUTE_Y);
 	}
 	
+	/**
+	 * Method: drawKarel
+	 * -------------------
+	 * This method will draw Karel in upright position and
+	 * place it in the center of the canvas.
+	 */
 	private void drawKarel() {
 		karel.setSize(KAREL_SIZE, KAREL_SIZE);
 		double x = (canvas.getWidth() - karel.getWidth()) / 2;
 		canvas.add(karel, x, KAREL_Y);
 	}
 	
+	/**
+	 * Method: drawString
+	 * --------------------
+	 * This method will draw seven strings of the Karel's parachute.
+	 * Each string will be named line1, line2, line3, line4, line5,
+	 * line6, line7. These seven strings indicate the number of guess
+	 * left. When the user guess wrong letter, one string will
+	 * disappear.
+	 */
 	private void drawString() {
 		double startX = (canvas.getWidth() - parachute.getWidth()) / 2;
 		double startY = PARACHUTE_Y + parachute.getHeight();
@@ -282,6 +333,13 @@ public class Hangman extends ConsoleProgram {
 		canvas.add(line7);	
 	}
 	
+	/**
+	 * Method: removeString
+	 * ---------------------
+	 * This method will turn one string invisible. When the user guess
+	 * wrong letter this method will be called. 
+	 * @param guessLeft
+	 */
 	private void removeString(int guessLeft) {
 		switch(guessLeft) {
 		case 6: line1.setVisible(false); break;
@@ -294,6 +352,13 @@ public class Hangman extends ConsoleProgram {
 		}
 	}
 	
+	/**
+	 * Method: partiallyGuessedLabel
+	 * -------------------------------
+	 * This method will show a label of correct letter 
+	 * that the user has guessed. The label will be positioned
+	 * below Karel.
+	 */
 	private void partiallyGuessedLabel() {
 		partiallyGuessed.setLabel(wordState);
 		partiallyGuessed.setFont(PARTIALLY_GUESSED_FONT);
@@ -301,16 +366,50 @@ public class Hangman extends ConsoleProgram {
 		canvas.add(partiallyGuessed, x, PARTIALLY_GUESSED_Y);
 	}
 	
+	/**
+	 * Method: incorrectGuessesLabel
+	 * ------------------------------
+	 * This method will show a label of incorrect letter
+	 * that the user has guessed. The label will be positioned
+	 * below the partiallyGuessed label.
+	 * 
+	 */
 	private void incorrectGuessesLabel() {
-		incorrectGuesses.setLabel(wrongWord);
+		incorrectGuesses.setLabel(wrongLetter);
 		incorrectGuesses.setFont(INCORRECT_GUESSES_FONT);
 		double x = (canvas.getWidth() - incorrectGuesses.getWidth()) / 2;
 		canvas.add(incorrectGuesses, x, INCORRECT_GUESSES_Y);
 	}
 	
+	/**
+	 * Method flipKarel
+	 * ------------------
+	 * This method will change the karel image to upside down.
+	 */
 	private void flipKarel() {
 		karel.setImage("karelFlipped.png");
 		drawKarel();
+	}
+	
+	/**
+	 * Method: openHangmanLexicon
+	 * This method will open a file "HangmanLexicon.txt" which contain
+	 * a library of secret words for the Hangman game. Each word will
+	 * be added to the wordList which is an ArrayList declared as
+	 * instance variable.
+	 */
+	private void openHangmanLexicon() {
+		try {
+			Scanner lexicon = new Scanner(new File("HangmanLexicon.txt"));
+			while(lexicon.hasNextLine()) {
+				String line = lexicon.nextLine();
+				wordList.add(line);
+			}
+			lexicon.close();
+		} catch(IOException e) {
+			println("Oops the file didn't open");
+		}
+		
 	}
 
 }
