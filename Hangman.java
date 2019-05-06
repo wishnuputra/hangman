@@ -147,7 +147,7 @@ public class Hangman extends ConsoleProgram {
 	 */
 	private String getRandomWord2() {
 		int maxIndex = wordList.size();
-		int index = rg.nextInt(maxIndex);
+		int index = rg.nextInt(maxIndex - 1);
 		String word = wordList.get(index);
 		
 		return word;
